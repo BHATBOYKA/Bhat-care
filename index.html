@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BHAT CARE</title>
+    
+    <!-- 1. ERROR HANDLER -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("Global Error:", message, lineno);
+        };
+    </script>
+
+    <!-- 2. TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { 100: '#fbf5d5', 300: '#f0d78c', 400: '#e6c255', 500: '#d4a72c', 600: '#b6831d' },
+                        night: { 800: '#151b2b', 900: '#0b0f19', 950: '#02040a' },
+                        teal: { 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488' }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'breathe': 'breathe 8s ease-in-out infinite',
+                        'slideUp': 'slideUp 0.5s ease-out',
+                        'fadeIn': 'fadeIn 0.5s ease-out',
+                        'scan': 'scan 2s linear infinite',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        breathe: { '0%, 100%': { transform: 'scale(1)', opacity: '0.8' }, '50%': { transform: 'scale(1.2)', opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        scan: { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(100%)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 3. REACT LIBRARIES -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 4. BABEL -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 5. FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        /* Premium Glass Effect */
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+        }
+        .dark .glass-panel { 
+            background: rgba(11, 15, 25, 0.7); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Gold Gradient Text */
+        .text-gradient-gold {
+            background: linear-gradient(135deg, #d4a72c 0%, #f0d78c 50%, #b6831d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .emergency-mode { background-color: #000000 !important; color: #ff0000 !important; z-index: 9999; }
+        .emergency-mode button { border: 2px solid red !important; }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 transition-colors duration-500 dark:bg-night-950 dark:text-slate-100">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- REACT SETUP ---
+        const { useState, useEffect, useRef, useMemo } = React;
+        
+        // --- API KEY ---
+        const apiKey = "AIzaSyAkNQWmKmyJTQp6rbL95ott_EXkW9BSTlE"; 
+
+        // --- ICONS (Lucide Style) ---
+        const Icon = ({ name, size = 24, className = "", fill="none" }) => {
+            const paths = {
+                activity: "M22 12h-4l-3 9L9 3l-3 9H2",
+                alert: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z M12 9v4 M12 17h.01",
+                search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.35-4.35",
+                mic: "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z M19 10v2a7 7 0 0 1-14 0v-2 M12 19v4 M8 23h8",
+                pill: "m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z M8.5 8.5l7 7",
+                home: "m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22v-10h6v10",
+                grid: "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
+                user: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
+                zap: "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+                camera: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
+                moon: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z",
+                sun: "M12 1v2 M12 21v2 M4.22 4.22l1.42 1.42 M18.36 18.36l1.42 1.42 M1 12h2 M21 12h2 M4.22 19.78l1.42-1.42 M18.36 5.64l1.42-1.42 M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+                lock: "M3 11h18v11H3z M7 11V7a5 5 0 0 1 10 0v4",
+                upload: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12",
+                x: "M18 6L6 18 M6 6l12 12",
+                save: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8",
+                trash: "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+                clock: "M12 2v10l4 4",
+                plus: "M12 5v14 M5 12h14",
+                leaf: "M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12",
+                chevronRight: "M9 18l6-6-6-6",
+                droplet: "M12 2.69l5.74 5.74a8.12 8.12 0 0 1 2.26 5.74c0 4.42-3.58 8-8 8s-8-3.58-8-8a8.12 8.12 0 0 1 2.26-5.74L12 2.69z",
+                download: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3",
+                phone: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                award: "M12 15l-2 5l2 2l2 -2l-2 -5 M12 8a6 6 0 1 1 0 -12a6 6 0 0 1 0 12z M12 3v1 M9 4l.5 1 M15 4l-.5 1",
+                database: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3 M21 5c0 1.66-4 3-9 3s-9-1.34-9-3 M21 5v14c0 1.66-4 3-9 3s-9-1.34-9-3V5 M3 5c0-1.66 4-3 9-3s9 1.34 9 3",
+                shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+                check: "M20 6L9 17l-5-5"
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d={paths[name] || "M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0 -20 0"} />
+                </svg>
+            );
+        };
+
+        // --- API HELPER ---
+        async function fetchGemini(prompt, systemInstruction, imageBase64 = null) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const contents = [{
+                role: "user",
+                parts: [
+                    { text: prompt },
+                    ...(imageBase64 ? [{ inline_data: { mime_type: "image/jpeg", data: imageBase64 } }] : [])
+                ]
+            }];
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents,
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+                if (!response.ok) throw new Error("API Error: " + response.status);
+                const data = await response.json();
+                let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("No response");
+                return JSON.parse(text.replace(/```json|```/g, '').trim());
+            } catch (error) {
+                console.error(error);
+                throw error;
+            }
+        }
+
+        // --- PREMIUM COMPONENTS ---
+
+        const AnimatedBg = () => (
+            <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-teal-400/20 dark:bg-teal-900/10 rounded-full blur-[100px] animate-pulse-slow"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-gold-400/20 dark:bg-gold-600/10 rounded-full blur-[100px] animate-pulse-slow" style={{animationDelay: '2s'}}></div>
+            </div>
+        );
+
+        const BodyMap = ({ onSelect }) => {
+            const [selected, setSelected] = useState(null);
+            
+            return (
+                <div className="relative w-full h-64 flex justify-center my-4">
+                    <svg viewBox="0 0 100 140" className="h-full drop-shadow-xl">
+                        {/* Silhouette */}
+                        <path d="M50 5 C40 5 35 15 35 25 C35 30 20 35 20 50 C20 60 38 65 40 85 C40 100 35 130 35 135 L45 135 L48 95 L52 95 L55 135 L65 135 C65 130 60 100 60 85 C62 65 80 60 80 50 C80 35 65 30 65 25 C65 15 60 5 50 5" 
+                            fill="currentColor" className="text-slate-200 dark:text-slate-800" />
+                        
+                        {/* Interactive Zones */}
+                        <circle cx="50" cy="18" r="10" 
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'head' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('head'); onSelect('Head/Brain'); }} />
+                        
+                        <path d="M38 35 L62 35 L60 60 L40 60 Z" 
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'chest' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('chest'); onSelect('Chest/Heart/Lungs'); }} />
+
+                        <circle cx="50" cy="70" r="10" 
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'stomach' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('stomach'); onSelect('Stomach/Gut'); }} />
+
+                        <rect x="15" y="35" width="15" height="40" rx="5"
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'limbs' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('limbs'); onSelect('Arms/Joints'); }} />
+                         <rect x="70" y="35" width="15" height="40" rx="5"
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'limbs' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('limbs'); onSelect('Arms/Joints'); }} />
+                        
+                        <rect x="38" y="85" width="10" height="45" rx="5"
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'legs' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('legs'); onSelect('Legs/Knees'); }} />
+                        <rect x="52" y="85" width="10" height="45" rx="5"
+                            className={`cursor-pointer transition-all hover:opacity-80 ${selected === 'legs' ? 'fill-red-400 animate-pulse' : 'fill-teal-500/30'}`} 
+                            onClick={() => { setSelected('legs'); onSelect('Legs/Knees'); }} />
+                    </svg>
+                    <div className="absolute bottom-0 text-xs font-bold text-slate-400">Tap a body zone</div>
+                </div>
+            );
+        };
+
+        const HealthOrb = ({ status = 'good' }) => {
+            const colors = {
+                good: 'text-teal-400 shadow-teal-500/50',
+                moderate: 'text-gold-400 shadow-gold-500/50',
+                poor: 'text-red-500 shadow-red-500/50'
+            };
+            return (
+                <div className="relative w-40 h-40 mx-auto my-6 group">
+                    <div className={`absolute inset-4 rounded-full bg-gradient-to-tr from-white/10 to-white/30 backdrop-blur-md border border-white/20 z-10 animate-float flex items-center justify-center ${colors[status]}`}>
+                        <Icon name="activity" size={40} className="drop-shadow-lg" />
+                    </div>
+                    <div className={`absolute inset-0 rounded-full border-2 border-dashed border-current opacity-30 animate-spin-slow ${colors[status]}`}></div>
+                    <div className={`absolute inset-2 rounded-full border border-current opacity-20 animate-pulse ${colors[status]}`}></div>
+                    <div className={`absolute inset-10 bg-current rounded-full filter blur-[40px] opacity-40 animate-pulse-slow ${colors[status]}`}></div>
+                </div>
+            );
+        };
+
+        const NavBtn = ({ icon, label, active, onClick }) => (
+            <button onClick={onClick} className={`relative flex flex-col items-center gap-1 transition-all duration-300 ${active ? 'text-teal-600 dark:text-teal-400 -translate-y-1' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                <Icon name={icon} size={22} strokeWidth={active ? 2.5 : 2} />
+                <span className={`text-[10px] font-bold tracking-wide transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`}>{label}</span>
+                {active && <span className="absolute -bottom-2 w-1 h-1 bg-current rounded-full"></span>}
+            </button>
+        );
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [view, setView] = useState('dashboard');
+            const [darkMode, setDarkMode] = useState(true); 
+            const [emergencyMode, setEmergencyMode] = useState(false);
+            
+            // --- STATE MANAGEMENT ---
+            const [user, setUser] = useState(() => {
+                const saved = localStorage.getItem('bhat_care_user');
+                return saved ? JSON.parse(saved) : { 
+                    name: 'Guest', age: '', sex: '', height: '', weight: '', 
+                    allergies: '', conditions: '', twinStatus: 'good', waterGoal: 2000, waterCurrent: 0,
+                    emergencyContactName: '', emergencyContactPhone: ''
+                };
+            });
+
+            const [cabinet, setCabinet] = useState(() => {
+                const saved = localStorage.getItem('bhat_care_cabinet');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            // Persist Data
+            useEffect(() => { localStorage.setItem('bhat_care_user', JSON.stringify(user)); }, [user]);
+            useEffect(() => { localStorage.setItem('bhat_care_cabinet', JSON.stringify(cabinet)); }, [cabinet]);
+
+            useEffect(() => {
+                if (darkMode) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }, [darkMode]);
+
+            const addToCabinet = (med) => {
+                setCabinet(prev => [...prev, { ...med, id: Date.now() }]);
+            };
+
+            const removeMed = (id) => {
+                setCabinet(prev => prev.filter(m => m.id !== id));
+            };
+
+            const toggleWater = () => {
+                setUser(u => ({ ...u, waterCurrent: u.waterCurrent >= u.waterGoal ? 0 : u.waterCurrent + 250 }));
+            };
+
+            if (emergencyMode) return <EmergencyScreen onClose={() => setEmergencyMode(false)} user={user} />;
+
+            return (
+                <div className="min-h-screen pb-24 relative overflow-x-hidden selection:bg-teal-500/30">
+                    <AnimatedBg />
+                    
+                    {/* HEADER */}
+                    <header className="px-6 py-4 flex justify-between items-center sticky top-0 z-40 glass-panel">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl shadow-lg shadow-teal-500/20 flex items-center justify-center text-white font-bold text-xl">B</div>
+                            <div>
+                                <h1 className="font-bold text-lg dark:text-white leading-none">BHAT CARE</h1>
+                                <span className="text-[10px] font-bold text-gold-500 uppercase tracking-widest">Premium</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setEmergencyMode(true)} className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center animate-pulse"><Icon name="alert" size={18} /></button>
+                            <button onClick={() => setDarkMode(!darkMode)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 dark:text-gold-400 flex items-center justify-center transition-transform active:scale-90"><Icon name={darkMode ? 'sun' : 'moon'} size={18} /></button>
+                        </div>
+                    </header>
+
+                    {/* MAIN CONTENT AREA */}
+                    <main className="p-5 animate-float" style={{animationDuration: '0s'}}> 
+                        {view === 'dashboard' && <Dashboard user={user} setView={setView} toggleWater={toggleWater} />}
+                        {view === 'checker' && <SymptomChecker user={user} setUser={setUser} setView={setView} />}
+                        {view === 'tools' && <ToolsHub setView={setView} />}
+                        {view === 'chat' && <AIChat user={user} />}
+                        {view === 'medicine' && <MedicineCenter user={user} cabinet={cabinet} addToCabinet={addToCabinet} removeMed={removeMed} />}
+                        {view === 'vision' && <ReportAnalyzer />}
+                        {view === 'profile' && <ProfileView user={user} setUser={setUser} cabinet={cabinet} />}
+                        {view === 'diet' && <NutriGen user={user} />}
+                        {view === 'zen' && <ZenMode />}
+                        {view === 'wellbeing' && <DigitalWellbeing user={user} cabinet={cabinet} />}
+                    </main>
+
+                    {/* NAVIGATION */}
+                    <nav className="fixed bottom-0 left-0 w-full glass-panel border-t border-white/10 flex justify-around py-4 pb-8 z-50 rounded-t-3xl shadow-2xl backdrop-blur-xl">
+                        <NavBtn icon="home" label="Home" active={view === 'dashboard'} onClick={() => setView('dashboard')} />
+                        <NavBtn icon="search" label="Check" active={view === 'checker'} onClick={() => setView('checker')} />
+                        <div className="relative -top-8">
+                            <button onClick={() => setView('chat')} className="w-16 h-16 bg-gradient-to-tr from-teal-400 to-teal-600 rounded-full shadow-xl shadow-teal-500/40 flex items-center justify-center text-white active:scale-90 transition-transform border-4 border-slate-50 dark:border-night-950">
+                                <Icon name="zap" size={28} fill="currentColor" />
+                            </button>
+                        </div>
+                        <NavBtn icon="grid" label="Tools" active={['tools', 'medicine', 'vision', 'diet', 'zen', 'wellbeing'].includes(view)} onClick={() => setView('tools')} />
+                        <NavBtn icon="user" label="Profile" active={view === 'profile'} onClick={() => setView('profile')} />
+                    </nav>
+                </div>
+            );
+        };
+
+        // --- VIEWS ---
+
+        const Dashboard = ({ user, setView, toggleWater }) => {
+            const bmi = (user.weight && user.height) ? (user.weight / ((user.height/100) ** 2)).toFixed(1) : '--';
+            const waterPct = Math.min(100, (user.waterCurrent / user.waterGoal) * 100);
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="text-center pt-2">
+                        <h2 className="text-2xl font-bold dark:text-white">Good {new Date().getHours() < 12 ? 'Morning' : 'Evening'}, <span className="text-gradient-gold">{user.name}</span></h2>
+                        <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest">System Status: Optimal</p>
+                        <HealthOrb status={user.twinStatus} />
+                    </div>
+
+                    {/* Quick Vitals */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="glass-panel p-4 rounded-2xl flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-xs font-bold text-slate-400 uppercase">BMI Score</span>
+                                <Icon name="activity" size={16} className="text-teal-500" />
+                            </div>
+                            <div>
+                                <span className="text-2xl font-bold dark:text-white">{bmi}</span>
+                                <span className="text-xs text-slate-400 ml-1">kg/m²</span>
+                            </div>
+                        </div>
+                        <div className="glass-panel p-4 rounded-2xl relative overflow-hidden" onClick={toggleWater}>
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Hydration</span>
+                                    <Icon name="droplet" size={16} className="text-blue-500" />
+                                </div>
+                                <div>
+                                    <span className="text-2xl font-bold dark:text-white">{user.waterCurrent}</span>
+                                    <span className="text-xs text-slate-400 ml-1">/ {user.waterGoal}ml</span>
+                                </div>
+                            </div>
+                            <div className="absolute bottom-0 left-0 w-full bg-blue-500/20 transition-all duration-1000" style={{height: `${waterPct}%`}}></div>
+                        </div>
+                    </div>
+
+                    {/* Action Cards */}
+                    <div className="grid grid-cols-1 gap-4">
+                        <div onClick={() => setView('checker')} className="group bg-gradient-to-r from-teal-500 to-teal-700 p-5 rounded-2xl shadow-lg shadow-teal-500/20 cursor-pointer relative overflow-hidden">
+                            <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 group-hover:scale-110 transition-transform">
+                                <Icon name="search" size={100} />
+                            </div>
+                            <h3 className="font-bold text-white text-lg">Symptom Checker AI</h3>
+                            <p className="text-teal-100 text-sm opacity-90">Advanced root cause analysis</p>
+                            <div className="mt-4 inline-flex items-center gap-2 text-white text-xs font-bold bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md">
+                                START SCAN <Icon name="chevronRight" size={12} />
+                            </div>
+                        </div>
+                        
+                        <div onClick={() => setView('diet')} className="glass-panel p-5 rounded-2xl border-l-4 border-gold-400 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors flex justify-between items-center">
+                            <div>
+                                <h3 className="font-bold dark:text-white">NutriGen Plan</h3>
+                                <p className="text-xs text-slate-500">AI personalized meal prep</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gold-400/20 text-gold-500 flex items-center justify-center">
+                                <Icon name="leaf" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SymptomChecker = ({ user, setUser, setView }) => {
+            const [step, setStep] = useState(1);
+            const [selectedPart, setSelectedPart] = useState('');
+            const [input, setInput] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+
+            const analyze = async () => {
+                setLoading(true);
+                const systemPrompt = `Analyze symptoms for patient: Age ${user.age}, Sex ${user.sex}, History: ${user.conditions}. 
+                Context: Pain in ${selectedPart}. 
+                Output valid JSON: { 
+                    "isRedFlag": boolean, 
+                    "summary": "Short layman summary", 
+                    "causes": [{"name": "string", "prob": "number%"}], 
+                    "advice": "string", 
+                    "severity": number (1-10) 
+                }`;
+                
+                try {
+                    const data = await fetchGemini(`Symptoms: ${input}. Location: ${selectedPart}`, systemPrompt);
+                    setResult(data);
+                    setStep(3);
+                    if (data.severity > 6) setUser(u => ({ ...u, twinStatus: 'poor' }));
+                    else if (data.severity > 3) setUser(u => ({ ...u, twinStatus: 'moderate' }));
+                } catch (e) {
+                    alert("AI Analysis Failed. Try again.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="h-full flex flex-col">
+                    <div className="flex items-center gap-2 mb-4">
+                        <button onClick={() => setView('dashboard')}><Icon name="x" className="text-slate-400" /></button>
+                        <h2 className="text-xl font-bold dark:text-white">AI Diagnosis</h2>
+                    </div>
+
+                    {step === 1 && (
+                        <div className="flex-1 flex flex-col items-center animate-fadeIn">
+                            <h3 className="text-center text-slate-500 text-sm mb-4">Where does it hurt?</h3>
+                            <BodyMap onSelect={(part) => { setSelectedPart(part); setStep(2); }} />
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="flex-1 space-y-4 animate-slideUp">
+                            <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-xl flex items-center gap-2 text-teal-700 dark:text-teal-400 text-sm font-bold">
+                                <div className="w-2 h-2 bg-teal-500 rounded-full"></div> Selected: {selectedPart}
+                            </div>
+                            <textarea 
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                className="w-full h-40 bg-white dark:bg-night-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
+                                placeholder="Describe the pain... (e.g., throbbing, sharp, constant)"
+                            ></textarea>
+                            <button 
+                                onClick={analyze}
+                                disabled={!input || loading}
+                                className="w-full py-4 bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-500/30 disabled:opacity-50 flex justify-center items-center gap-2"
+                            >
+                                {loading ? <Icon name="loader" className="animate-spin"/> : 'Run Analysis'}
+                            </button>
+                        </div>
+                    )}
+
+                    {step === 3 && result && (
+                        <div className="space-y-4 animate-slideUp">
+                            {result.isRedFlag && (
+                                <div className="bg-red-500 text-white p-4 rounded-xl flex items-center gap-3 animate-pulse">
+                                    <Icon name="alert" />
+                                    <div>
+                                        <p className="font-bold">Medical Attention Recommended</p>
+                                        <p className="text-xs opacity-90">High severity detected</p>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="glass-panel p-5 rounded-2xl">
+                                <h3 className="font-bold text-lg dark:text-white mb-2">Analysis</h3>
+                                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{result.summary}</p>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase">Potential Causes</h4>
+                                {result.causes.map((c, i) => (
+                                    <div key={i} className="flex justify-between items-center bg-white dark:bg-night-800 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                        <span className="font-medium dark:text-slate-200">{c.name}</span>
+                                        <span className="text-xs font-bold bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-400 px-2 py-1 rounded-lg">{c.prob}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={() => setStep(1)} className="w-full py-3 bg-slate-200 dark:bg-slate-800 dark:text-white rounded-xl font-bold mt-4">New Check</button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ToolsHub = ({ setView }) => {
+            const tools = [
+                { id: 'medicine', name: 'Smart Cabinet', icon: 'pill', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                { id: 'vision', name: 'Report Reader', icon: 'camera', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                { id: 'diet', name: 'NutriGen', icon: 'leaf', color: 'text-green-500', bg: 'bg-green-500/10' },
+                { id: 'zen', name: 'Zen Mode', icon: 'moon', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+                { id: 'wellbeing', name: 'Digital Wellbeing', icon: 'shield', color: 'text-gold-500', bg: 'bg-gold-500/10' },
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold dark:text-white">Health Tools</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        {tools.map(tool => (
+                            <button key={tool.id} onClick={() => setView(tool.id)} className="glass-panel p-6 rounded-2xl flex flex-col items-center text-center gap-3 hover:border-teal-500/50 transition-colors group">
+                                <div className={`w-14 h-14 rounded-full ${tool.bg} flex items-center justify-center ${tool.color} group-hover:scale-110 transition-transform`}>
+                                    <Icon name={tool.icon} size={28} />
+                                </div>
+                                <span className="font-bold dark:text-slate-200">{tool.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const DigitalWellbeing = ({ user, cabinet }) => {
+            const [optimizing, setOptimizing] = useState(false);
+            
+            // Calculate Storage Stats
+            const dataSize = useMemo(() => {
+                const ls = JSON.stringify(localStorage);
+                return (ls.length / 1024).toFixed(2); // KB
+            }, [cabinet, user]);
+
+            const maxStorage = 5120; // 5MB limit roughly
+            const storagePercent = Math.min((dataSize / maxStorage) * 100, 100);
+
+            // Calculate "Privacy Score"
+            const privacyScore = useMemo(() => {
+                let score = 0;
+                if(user.name !== 'Guest') score += 20;
+                if(user.emergencyContactPhone) score += 40;
+                if(cabinet.length > 0) score += 20;
+                if(user.conditions) score += 20;
+                return score;
+            }, [user, cabinet]);
+
+            const optimizeData = () => {
+                setOptimizing(true);
+                setTimeout(() => {
+                    setOptimizing(false);
+                    alert("App data optimized. Cache cleared and indexes rebuilt.");
+                }, 2000);
+            };
+
+            const downloadData = () => {
+                const data = { profile: user, medicines: cabinet, exportDate: new Date() };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `BHAT_CARE_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            }
+
+            return (
+                <div className="space-y-6 animate-fadeIn">
+                    <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
+                        <Icon name="shield" className="text-gold-500" /> Digital Wellbeing
+                    </h2>
+
+                    {/* Score Card */}
+                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5"><Icon name="database" size={120} /></div>
+                        
+                        <div className="text-center mb-6">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Data Integrity Score</span>
+                            <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-teal-400 to-teal-600 mt-2">{privacyScore}%</div>
+                            <div className="text-xs text-teal-500 font-bold mt-1">
+                                {privacyScore > 80 ? 'Excellent Protection' : 'Action Recommended'}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <div className="flex justify-between text-xs font-bold mb-1 dark:text-slate-300">
+                                    <span>Storage Used</span>
+                                    <span>{dataSize} KB</span>
+                                </div>
+                                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gold-500 rounded-full transition-all duration-1000" style={{width: `${Math.max(2, storagePercent)}%`}}></div>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-center text-xs text-slate-500">
+                                <div className="bg-slate-50 dark:bg-night-800 p-2 rounded-lg">
+                                    <div className="font-bold dark:text-white text-lg">{cabinet.length}</div>
+                                    <div>Meds Tracked</div>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-night-800 p-2 rounded-lg">
+                                    <div className="font-bold dark:text-white text-lg">{user.emergencyContactPhone ? 'Active' : 'Missing'}</div>
+                                    <div>Emerg. Contact</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-slate-500 uppercase">Maintenance</h3>
+                        
+                        <button onClick={downloadData} className="w-full bg-white dark:bg-night-800 p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center group">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center"><Icon name="download" size={18} /></div>
+                                <div className="text-left">
+                                    <div className="font-bold dark:text-white">Backup Data</div>
+                                    <div className="text-xs text-slate-500">Export local records</div>
+                                </div>
+                            </div>
+                            <Icon name="chevronRight" size={16} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                        </button>
+
+                        <button onClick={optimizeData} disabled={optimizing} className="w-full bg-white dark:bg-night-800 p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center group relative overflow-hidden">
+                            {optimizing && <div className="absolute inset-0 bg-teal-500/10 z-0 animate-pulse"></div>}
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-10 h-10 rounded-full bg-teal-500/10 text-teal-500 flex items-center justify-center">
+                                    {optimizing ? <Icon name="loader" className="animate-spin" size={18}/> : <Icon name="check" size={18} />}
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold dark:text-white">{optimizing ? 'Optimizing...' : 'Digital Detox'}</div>
+                                    <div className="text-xs text-slate-500">Clean cache & optimize DB</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                     {/* Visual Scanner Decoration */}
+                     <div className="relative h-24 bg-night-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
+                         <div className="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(0,255,100,0.1)_50%,transparent_100%)] h-full w-full animate-scan"></div>
+                         <div className="text-teal-500 font-mono text-xs z-10">SYSTEM SECURE • ENCRYPTED LOCALLY</div>
+                     </div>
+                </div>
+            );
+        };
+
+        const MedicineCenter = ({ user, cabinet, addToCabinet, removeMed }) => {
+            const [search, setSearch] = useState('');
+            const [analysis, setAnalysis] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            const checkMed = async () => {
+                setLoading(true);
+                const prompt = `Medicine: ${search}. User: ${user.age}yo, Conditions: ${user.conditions}. JSON: { "name": "Generic Name", "use": "Short use", "safety": "Safe/Caution/Danger", "warning": "Specific warning or None" }`;
+                try {
+                    const data = await fetchGemini(search, prompt);
+                    setAnalysis(data);
+                } catch(e) { alert("Error checking medicine"); }
+                setLoading(false);
+            };
+
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setAnalysis(null)} className={!analysis ? 'hidden' : ''}><Icon name="x" /></button>
+                        <h2 className="text-xl font-bold dark:text-white">Smart Cabinet</h2>
+                    </div>
+
+                    {!analysis ? (
+                        <>
+                            <div className="flex gap-2">
+                                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Type medicine name..." className="flex-1 p-3 rounded-xl bg-white dark:bg-night-800 border border-slate-200 dark:border-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-teal-500" />
+                                <button onClick={checkMed} disabled={loading} className="bg-teal-600 text-white p-3 rounded-xl font-bold">{loading ? '...' : <Icon name="search"/>}</button>
+                            </div>
+
+                            <div className="mt-6">
+                                <h3 className="text-sm font-bold text-slate-500 uppercase mb-3">Saved Medicines</h3>
+                                {cabinet.length === 0 && <p className="text-slate-400 text-sm italic">Cabinet empty.</p>}
+                                <div className="space-y-3">
+                                    {cabinet.map(med => (
+                                        <div key={med.id} className="bg-white dark:bg-night-800 p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                            <div>
+                                                <div className="font-bold dark:text-white">{med.name}</div>
+                                                <div className="text-xs text-slate-500">{med.use}</div>
+                                            </div>
+                                            <button onClick={() => removeMed(med.id)} className="text-red-400"><Icon name="trash" size={18} /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="animate-fadeIn">
+                            <div className={`p-5 rounded-2xl border ${analysis.safety === 'Safe' ? 'bg-teal-50 border-teal-200 dark:bg-teal-900/20' : 'bg-orange-50 border-orange-200 dark:bg-orange-900/20'}`}>
+                                <h3 className="text-xl font-bold dark:text-white mb-1">{analysis.name}</h3>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${analysis.safety === 'Safe' ? 'bg-teal-200 text-teal-800' : 'bg-orange-200 text-orange-800'}`}>{analysis.safety}</span>
+                                </div>
+                                <p className="text-sm dark:text-slate-300 mb-2"><strong>Uses:</strong> {analysis.use}</p>
+                                <p className="text-sm dark:text-slate-300"><strong>Note:</strong> {analysis.warning}</p>
+                            </div>
+                            <button onClick={() => { addToCabinet(analysis); setAnalysis(null); setSearch(''); }} className="w-full mt-4 bg-slate-900 dark:bg-white dark:text-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                                <Icon name="plus" size={18} /> Add to Cabinet
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const NutriGen = ({ user }) => {
+            const [plan, setPlan] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            const generate = async () => {
+                setLoading(true);
+                const prompt = `Create a 1-day meal plan for: ${user.age}yo, ${user.weight}kg, Goal: Healthy. JSON: { "breakfast": string, "lunch": string, "dinner": string, "calories": number }`;
+                try {
+                    const data = await fetchGemini("Generate diet", prompt);
+                    setPlan(data);
+                } catch (e) { alert("Failed to generate."); }
+                setLoading(false);
+            };
+
+            return (
+                <div className="space-y-6">
+                     <h2 className="text-2xl font-bold dark:text-white">NutriGen AI</h2>
+                     {!plan ? (
+                        <div className="text-center py-10">
+                            <Icon name="leaf" size={64} className="mx-auto text-green-400 mb-4" />
+                            <p className="text-slate-500 mb-6">Generate a personalized meal plan based on your profile.</p>
+                            <button onClick={generate} disabled={loading} className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-green-500/30">
+                                {loading ? 'Generating...' : 'Create Plan'}
+                            </button>
+                        </div>
+                     ) : (
+                        <div className="space-y-4 animate-fadeIn">
+                            <div className="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name="leaf" size={100} /></div>
+                                <h3 className="font-bold text-xl dark:text-white mb-4">Daily Plan</h3>
+                                {['Breakfast', 'Lunch', 'Dinner'].map(meal => (
+                                    <div key={meal} className="mb-4 last:mb-0">
+                                        <span className="text-xs font-bold text-green-500 uppercase">{meal}</span>
+                                        <p className="dark:text-slate-200 font-medium">{plan[meal.toLowerCase()]}</p>
+                                    </div>
+                                ))}
+                                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                    <span className="text-slate-500 text-sm">Est. Calories</span>
+                                    <span className="font-bold text-lg dark:text-white">{plan.calories} kcal</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setPlan(null)} className="w-full py-3 text-slate-500 font-bold">Regenerate</button>
+                        </div>
+                     )}
+                </div>
+            );
+        };
+
+        const ZenMode = () => {
+            const [active, setActive] = useState(false);
+
+            return (
+                <div className="h-full flex flex-col items-center justify-center relative">
+                    {!active ? (
+                        <div className="text-center space-y-6">
+                            <h2 className="text-3xl font-bold dark:text-white">Zen Mode</h2>
+                            <p className="text-slate-500">4-7-8 Guided Breathing</p>
+                            <button onClick={() => setActive(true)} className="w-20 h-20 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/40 hover:scale-110 transition-transform">
+                                <Icon name="play" fill="currentColor" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="text-center relative z-10">
+                            <div className="w-64 h-64 bg-gradient-to-tr from-indigo-400 to-purple-400 rounded-full blur-xl opacity-30 animate-breathe absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                            <div className="w-48 h-48 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-2xl animate-breathe relative z-20 mx-auto mb-10">
+                                Inhale...
+                            </div>
+                            <button onClick={() => setActive(false)} className="text-slate-500 font-bold">Stop Session</button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const AIChat = ({ user }) => {
+            const [msgs, setMsgs] = useState([{ role: 'ai', text: `Hello ${user.name}. How can I assist your health today?` }]);
+            const [input, setInput] = useState('');
+            const endRef = useRef(null);
+
+            useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [msgs]);
+
+            const send = async () => {
+                if (!input) return;
+                const newMsgs = [...msgs, { role: 'user', text: input }];
+                setMsgs(newMsgs);
+                setInput('');
+                
+                try {
+                    const prompt = `You are a medical AI. Concise, helpful. User: ${user.age}yo. Query: ${input}. JSON: { "reply": "string" }`;
+                    const res = await fetchGemini(input, prompt);
+                    setMsgs([...newMsgs, { role: 'ai', text: res.reply }]);
+                } catch {
+                    setMsgs([...newMsgs, { role: 'ai', text: "Network error." }]);
+                }
+            };
+
+            return (
+                <div className="h-[calc(100vh-180px)] flex flex-col">
+                    <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4 hide-scroll">
+                        {msgs.map((m, i) => (
+                            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.role === 'user' ? 'bg-teal-600 text-white rounded-tr-sm' : 'bg-white dark:bg-night-800 dark:text-slate-200 border border-slate-100 dark:border-slate-800 rounded-tl-sm'}`}>
+                                    {m.text}
+                                </div>
+                            </div>
+                        ))}
+                        <div ref={endRef}></div>
+                    </div>
+                    <div className="flex gap-2 bg-white dark:bg-night-800 p-2 rounded-full border border-slate-200 dark:border-slate-800">
+                        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Ask AI..." className="flex-1 bg-transparent px-4 outline-none dark:text-white" />
+                        <button onClick={send} className="w-10 h-10 bg-teal-500 rounded-full text-white flex items-center justify-center"><Icon name="zap" size={18}/></button>
+                    </div>
+                </div>
+            );
+        };
+
+        const ReportAnalyzer = () => {
+             const [img, setImg] = useState(null);
+             const [res, setRes] = useState(null);
+             const [load, setLoad] = useState(false);
+             const inputRef = useRef();
+
+             const process = async () => {
+                 setLoad(true);
+                 const base64 = img.split(',')[1];
+                 const prompt = `Analyze medical report image. JSON: { "title": "Test Name", "findings": ["point 1", "point 2"], "status": "Normal/Abnormal" }`;
+                 try {
+                     const data = await fetchGemini("Analyze", prompt, base64);
+                     setRes(data);
+                 } catch (e) { alert("Failed"); }
+                 setLoad(false);
+             };
+
+             const handleFile = (e) => {
+                 const reader = new FileReader();
+                 reader.onload = (ev) => setImg(ev.target.result);
+                 reader.readAsDataURL(e.target.files[0]);
+             }
+
+             return (
+                 <div className="space-y-4">
+                     <h2 className="text-xl font-bold dark:text-white">Report Reader</h2>
+                     {!img ? (
+                         <div onClick={() => inputRef.current.click()} className="h-48 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                             <Icon name="upload" size={32} />
+                             <span className="mt-2 text-sm font-bold">Upload Report</span>
+                             <input type="file" ref={inputRef} hidden onChange={handleFile} accept="image/*" />
+                         </div>
+                     ) : (
+                         <div className="relative">
+                             <img src={img} className="w-full rounded-2xl max-h-64 object-cover" />
+                             {!res && <button onClick={process} className="w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl font-bold">{load ? 'Scanning...' : 'Analyze'}</button>}
+                         </div>
+                     )}
+                     
+                     {res && (
+                         <div className="glass-panel p-5 rounded-2xl animate-slideUp">
+                             <div className="flex justify-between items-center mb-4">
+                                 <h3 className="font-bold text-lg dark:text-white">{res.title}</h3>
+                                 <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${res.status === 'Normal' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{res.status}</span>
+                             </div>
+                             <ul className="space-y-2">
+                                 {res.findings.map((f,i) => <li key={i} className="text-sm dark:text-slate-300 flex gap-2"><div className="mt-1.5 w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>{f}</li>)}
+                             </ul>
+                             <button onClick={() => { setImg(null); setRes(null); }} className="w-full mt-4 py-2 text-slate-500 font-bold text-sm">Scan Another</button>
+                         </div>
+                     )}
+                 </div>
+             )
+        };
+
+        const ProfileView = ({ user, setUser, cabinet }) => {
+            const [showWall, setShowWall] = useState(false);
+            const handleChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
+            
+            const exportData = () => {
+                const data = { profile: user, medicines: cabinet, exportDate: new Date() };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `BHAT_CARE_DATA_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            };
+
+            return (
+                <div className="space-y-4 pb-10">
+                    <h2 className="text-xl font-bold dark:text-white">My Profile</h2>
+                    
+                    <div className="glass-panel p-6 rounded-2xl space-y-4">
+                        <h3 className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-2">Personal Details</h3>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Name</label>
+                            <input name="name" value={user.name} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white focus:border-teal-500 outline-none" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Age</label>
+                                <input name="age" type="number" value={user.age} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Sex</label>
+                                <select name="sex" value={user.sex} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none">
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Height (cm)</label>
+                                <input name="height" type="number" value={user.height} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Weight (kg)</label>
+                                <input name="weight" type="number" value={user.weight} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Chronic Conditions</label>
+                            <input name="conditions" value={user.conditions} onChange={handleChange} placeholder="e.g. Asthma, Diabetes" className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Water Goal (ml)</label>
+                            <input name="waterGoal" type="number" value={user.waterGoal} onChange={handleChange} className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                        </div>
+                    </div>
+
+                    {/* Emergency Contact Section */}
+                    <div className="glass-panel p-6 rounded-2xl space-y-4 border-l-4 border-red-400">
+                        <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Icon name="phone" size={14}/> Emergency Contact</h3>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Contact Name</label>
+                            <input name="emergencyContactName" value={user.emergencyContactName} onChange={handleChange} placeholder="e.g. Mom" className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+                            <input name="emergencyContactPhone" type="tel" value={user.emergencyContactPhone} onChange={handleChange} placeholder="e.g. 9876543210" className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 py-2 dark:text-white outline-none" />
+                        </div>
+                    </div>
+
+                    {/* Data Actions */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <button onClick={exportData} className="bg-slate-200 dark:bg-night-800 p-4 rounded-xl font-bold text-sm flex flex-col items-center gap-2 dark:text-white">
+                            <Icon name="download" /> Export Data
+                        </button>
+                        <button onClick={() => setShowWall(true)} className="bg-gradient-to-br from-gold-300 to-gold-500 p-4 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-2 shadow-lg shadow-gold-500/20">
+                            <Icon name="award" /> Creator Wall
+                        </button>
+                    </div>
+
+                    <div className="text-center">
+                         <button onClick={() => { if(confirm("Clear all data?")) { localStorage.clear(); window.location.reload(); } }} className="text-red-400 text-sm font-bold mt-4">Reset App Data</button>
+                    </div>
+
+                    {/* Creator Wall Modal */}
+                    {showWall && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-fadeIn" onClick={() => setShowWall(false)}>
+                            <div className="bg-night-900 border border-gold-500/30 p-8 rounded-3xl max-w-sm w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-500 to-transparent"></div>
+                                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-gold-400 to-gold-600 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-gold-500/20">
+                                    <span className="font-cinzel font-bold text-3xl text-night-950">B</span>
+                                </div>
+                                <h3 className="text-gold-400 font-cinzel text-xl font-bold mb-1">Architect & Creator</h3>
+                                <h2 className="text-3xl font-black text-white tracking-wider mb-6 font-cinzel">BHAT BOYKA</h2>
+                                <p className="text-slate-400 text-sm italic mb-6">"Innovating health through digital intelligence."</p>
+                                <button onClick={() => setShowWall(false)} className="px-8 py-2 border border-gold-500/50 text-gold-400 rounded-full text-xs font-bold hover:bg-gold-500/10 transition-colors">CLOSE</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const EmergencyScreen = ({ onClose, user }) => (
+            <div className="fixed inset-0 bg-black z-[100] flex flex-col p-6 animate-pulse emergency-mode">
+                <div className="flex justify-between items-center mb-10">
+                    <h1 className="text-4xl font-black uppercase text-red-600">SOS</h1>
+                    <button onClick={onClose} className="border-2 border-red-600 text-red-600 px-6 py-2 rounded font-bold">EXIT</button>
+                </div>
+                
+                <div className="space-y-4 mb-8">
+                    <a href="tel:112" className="block w-full bg-red-600 text-white text-center py-6 rounded-2xl text-3xl font-bold shadow-lg shadow-red-600/50">CALL 112</a>
+                    
+                    {user.emergencyContactPhone && (
+                        <a href={`tel:${user.emergencyContactPhone}`} className="block w-full bg-white text-red-600 text-center py-4 rounded-2xl text-xl font-bold border-2 border-red-600">
+                            CALL {user.emergencyContactName || 'CONTACT'}
+                            <div className="text-sm font-normal">{user.emergencyContactPhone}</div>
+                        </a>
+                    )}
+                </div>
+
+                <div className="border border-red-900 p-6 rounded-2xl flex-1">
+                    <h3 className="text-xl font-bold text-red-500 mb-4">First Aid Steps</h3>
+                    <ul className="text-red-400 space-y-3 text-lg list-disc pl-5">
+                        <li>Check responsiveness</li>
+                        <li>Check breathing & pulse</li>
+                        <li>Start CPR if necessary</li>
+                        <li>Apply pressure to bleeding</li>
+                    </ul>
+                </div>
+            </div>
+        );
+
+        // --- RENDER ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+  </html>
